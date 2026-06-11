@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 发展史</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600;1,800&display=swap" rel="stylesheet">
+  <style>
+    /* === THEME === */
+    :root{
+      --ink:#1f1a14;--ink-rgb:31,26,20;--paper:#f0e6d2;--paper-rgb:240,230,210;
+      --sand:#c8a66b;--sand-dark:#745a37;--cream:#fff2cc;--night:#191510;
+      --serif:"Noto Serif SC",serif;--display:"Playfair Display","Noto Serif SC",serif;
+      --sans:"Noto Sans SC",sans-serif;--mono:"IBM Plex Mono",monospace;
+      --stage-bg:#17130f;--slide-bg:var(--paper);--ease:cubic-bezier(.16,1,.3,1);
+    }
+    *{box-sizing:border-box}
+
+    /* ===========================================
+       FIXED 16:9 STAGE: MANDATORY BASE STYLES
+       Slides are authored at 1920x1080 and scaled as a whole.
+       =========================================== */
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000)}
+    .deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000)}
+    .deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff)}
+    .slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff)}
+    .slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
+    img,video,canvas,svg{max-width:100%;max-height:100%}
+    .deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000}
+    @media print{
+      html,body{width:1920px;height:auto;overflow:visible;background:#fff}.deck-viewport{position:static;overflow:visible;background:#fff}
+      .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none}.slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always}
+      .slide:last-child{break-after:auto;page-break-after:auto}.deck-controls{display:none!important}
+    }
+    @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important}}
+
+    /* === SLIDE ATMOSPHERE === */
+    .slide{color:var(--ink);font-family:var(--sans);background:
+      radial-gradient(circle at 78% 42%,rgba(255,239,196,.82) 0 3%,rgba(211,173,105,.32) 12%,transparent 31%),
+      linear-gradient(122deg,#f2e8d4 0%,#e5d6b9 54%,#c3a471 100%)}
+    .slide.dark{color:var(--paper);background:
+      radial-gradient(circle at 74% 45%,rgba(200,166,107,.25),transparent 25%),
+      radial-gradient(ellipse at 40% 100%,rgba(200,166,107,.12),transparent 50%),var(--night)}
+    .slide::before{content:"";position:absolute;inset:-25%;background:repeating-radial-gradient(ellipse at 72% 72%,transparent 0 34px,rgba(var(--ink-rgb),.05) 35px 36px);transform:rotate(-8deg);opacity:.62;pointer-events:none}
+    .slide.dark::before{background:repeating-radial-gradient(ellipse at 72% 72%,transparent 0 34px,rgba(var(--paper-rgb),.05) 35px 36px)}
+    .slide::after{content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;background:repeating-linear-gradient(115deg,rgba(var(--ink-rgb),.13) 0 1px,transparent 1px 6px);mix-blend-mode:multiply}
+    .slide.dark::after{background:repeating-linear-gradient(115deg,rgba(var(--paper-rgb),.1) 0 1px,transparent 1px 6px);mix-blend-mode:screen}
+    .border{position:absolute;inset:44px;border:1px solid currentColor;opacity:.28;z-index:2;pointer-events:none}
+    .chrome{position:absolute;left:84px;right:84px;top:67px;display:flex;justify-content:space-between;z-index:4;font:500 21px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+    .chrome .right{text-align:right}.page-no{position:absolute;right:82px;bottom:65px;z-index:4;font:600 21px/1 var(--mono);letter-spacing:.13em}
+    .caption{font:500 20px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+    .serif{font-family:var(--serif)}.display{font-family:var(--display)}.mono{font-family:var(--mono)}
+    .eyebrow{font:600 21px/1.5 var(--mono);letter-spacing:.18em;text-transform:uppercase;opacity:.78}
+    .slide-title{font:700 76px/1.13 var(--serif);letter-spacing:.04em;margin:0}
+    .body{font:400 27px/1.75 var(--sans);letter-spacing:.04em}
+    .muted{opacity:.65}.accent{color:var(--sand-dark)}.dark .accent{color:var(--cream)}
+    .content{position:absolute;z-index:3;left:88px;right:88px;top:150px;bottom:92px}
+    .rule{height:1px;background:currentColor;opacity:.3}
+    .dot{width:11px;height:11px;border-radius:50%;background:currentColor;display:block}
+    .orb{border-radius:50%;border:1px solid currentColor;background:radial-gradient(circle at 40% 35%,#fff2c9 0 5%,#d8b77c 37%,#735b3c 74%,#1f1a14 100%);box-shadow:0 0 0 34px rgba(var(--paper-rgb),.08),0 0 120px rgba(255,237,191,.42)}
+    .dark .orb{box-shadow:0 0 0 34px rgba(var(--paper-rgb),.03),0 0 150px rgba(200,166,107,.24)}
+
+    /* === ANIMATION === */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .85s var(--ease),transform .85s var(--ease)}
+    .reveal-left{opacity:0;transform:translateX(-38px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+    .reveal-scale{opacity:0;transform:scale(.92);transition:opacity 1.1s var(--ease),transform 1.1s var(--ease)}
+    .slide.visible .reveal,.slide.visible .reveal-left,.slide.visible .reveal-scale{opacity:1;transform:none}
+    .d1{transition-delay:.08s}.d2{transition-delay:.18s}.d3{transition-delay:.3s}.d4{transition-delay:.44s}.d5{transition-delay:.58s}.d6{transition-delay:.72s}
+
+    /* === COVER === */
+    .cover-title{position:absolute;left:105px;top:220px;z-index:3}.cover-title .ai{display:block;font:italic 600 345px/.72 var(--display);letter-spacing:-.08em}.cover-title .zh{display:block;margin-top:75px;font:700 125px/1 var(--serif);letter-spacing:.15em}
+    .cover-sub{position:absolute;left:112px;bottom:91px;z-index:3;width:650px;font:400 25px/1.75 var(--serif);letter-spacing:.09em}
+    .cover-orb{position:absolute;z-index:2;width:500px;height:500px;right:245px;top:240px}
+    .cover-vlabel{position:absolute;right:655px;bottom:92px;z-index:3;writing-mode:vertical-rl;font:500 21px/1.55 var(--mono);letter-spacing:.18em}
+    .cover-timeline{position:absolute;right:90px;top:220px;bottom:126px;width:102px;z-index:3;border-left:1px solid currentColor;font:600 21px/1 var(--mono);letter-spacing:.08em}
+    .cover-timeline span{position:absolute;left:18px}.cover-timeline span::before{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:currentColor;left:-23px;top:2px}
+    .cover-bridge{position:absolute;left:590px;top:315px;width:455px;z-index:4;border-top:1px solid rgba(var(--ink-rgb),.48);padding-top:25px}
+    .cover-bridge::after{content:"";position:absolute;right:-95px;top:-1px;width:95px;height:1px;background:rgba(var(--ink-rgb),.48)}
+    .cover-bridge-title{font:600 22px/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase;margin-bottom:30px}
+    .cover-era{display:grid;grid-template-columns:100px 1fr;gap:26px;padding:18px 0;border-top:1px solid rgba(var(--ink-rgb),.18);font:600 24px/1.35 var(--serif);letter-spacing:.06em}
+    .cover-era span:first-child{font:600 21px/1.5 var(--mono);letter-spacing:.08em;opacity:.75}
+    .cover-years{position:absolute;left:565px;bottom:105px;z-index:2;font:italic 800 105px/1 var(--display);letter-spacing:-.055em;opacity:.09;white-space:nowrap}
+
+    /* === THESIS === */
+    .thesis-num{position:absolute;left:72px;top:130px;font:italic 800 500px/.8 var(--display);opacity:.1}
+    .thesis-main{position:absolute;left:260px;right:170px;top:285px;z-index:3;font:600 80px/1.38 var(--serif);letter-spacing:.035em}
+    .thesis-main strong{font-weight:900}.thesis-foot{position:absolute;left:270px;bottom:150px;display:flex;gap:80px;font:600 23px/1.5 var(--mono);letter-spacing:.13em}
+
+    /* === MASTER TIMELINE === */
+    .era-line{position:absolute;left:120px;right:120px;top:505px;height:2px;background:currentColor;opacity:.44}
+    .era{position:absolute;top:446px;width:260px}.era::after{content:"";position:absolute;left:0;top:58px;width:13px;height:13px;border-radius:50%;background:currentColor;box-shadow:0 0 0 11px rgba(var(--ink-rgb),.08)}
+    .dark .era::after{box-shadow:0 0 0 11px rgba(var(--paper-rgb),.08)}.era-year{font:700 25px/1 var(--mono);letter-spacing:.12em}.era-name{margin-top:90px;font:700 30px/1.4 var(--serif)}.era-note{margin-top:13px;font:400 22px/1.55 var(--sans);opacity:.72}
+
+    /* === SPLIT STORY === */
+    .split-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}.big-year{font:italic 800 190px/.9 var(--display);letter-spacing:-.06em}.story-text{font:600 52px/1.35 var(--serif);margin-top:40px}.story-body{font:400 24px/1.75 var(--sans);margin-top:30px;max-width:630px;opacity:.72}
+    .diagram-card{position:relative;height:650px;border:1px solid rgba(var(--ink-rgb),.3);background:rgba(var(--paper-rgb),.24);overflow:hidden}.dark .diagram-card{border-color:rgba(var(--paper-rgb),.25);background:rgba(var(--paper-rgb),.03)}
+    .logic-node{position:absolute;width:180px;height:180px;border:1px solid currentColor;border-radius:50%;display:grid;place-items:center;text-align:center;font:600 22px/1.45 var(--serif);background:rgba(var(--paper-rgb),.2)}.dark .logic-node{background:rgba(var(--paper-rgb),.03)}
+    .logic-links{position:absolute;inset:0;width:100%;height:100%;overflow:visible;opacity:.5}.logic-links line{stroke:currentColor;stroke-width:1.5;vector-effect:non-scaling-stroke}.logic-core{position:absolute;left:245px;top:205px;width:260px;height:260px}
+
+    /* === WINTERS === */
+    .wave{position:absolute;left:90px;right:90px;top:305px;height:410px;border-bottom:1px solid currentColor}
+    .wave svg{width:100%;height:100%;overflow:visible}.winter-zone{position:absolute;top:0;height:100%;background:rgba(var(--ink-rgb),.09);border-left:1px solid currentColor;border-right:1px solid currentColor}.dark .winter-zone{background:rgba(var(--paper-rgb),.045)}
+    .winter-label{position:absolute;top:54px;left:25px;font:600 21px/1.5 var(--mono);letter-spacing:.1em;writing-mode:vertical-rl}.wave-note{position:absolute;bottom:72px;width:390px}.wave-note strong{font:700 30px/1.3 var(--serif)}.wave-note p{font:400 22px/1.55 var(--sans);opacity:.72}
+
+    /* === EXPERT SYSTEM === */
+    .expert-shell{position:absolute;left:720px;right:70px;top:110px;bottom:80px;border:1px solid currentColor}.expert-core{position:absolute;left:270px;top:210px;width:300px;height:300px;border-radius:50%;border:1px solid currentColor;display:grid;place-items:center;text-align:center;font:700 35px/1.4 var(--serif);background:rgba(var(--paper-rgb),.06);box-shadow:0 0 0 45px rgba(var(--paper-rgb),.025)}
+    .expert-chip{position:absolute;width:240px;padding:20px;border-top:1px solid currentColor;font:600 22px/1.5 var(--mono);letter-spacing:.06em}.expert-chip small{display:block;margin-top:9px;font:400 20px/1.55 var(--sans);letter-spacing:.02em;opacity:.7}
+
+    /* === DATA TURN === */
+    .versus{display:grid;grid-template-columns:1fr 150px 1fr;align-items:center;height:650px;margin-top:40px}.side-card{height:560px;border-top:2px solid currentColor;padding:38px 20px 20px}.side-card .label{font:600 21px/1.4 var(--mono);letter-spacing:.16em}.side-card h3{font:700 58px/1.2 var(--serif);margin:30px 0}.side-card p{font:400 25px/1.75 var(--sans);opacity:.72}.vs{font:italic 800 85px/1 var(--display);text-align:center}
+    .data-dots{display:grid;grid-template-columns:repeat(8,1fr);gap:12px;margin-top:38px}.data-dots i{width:16px;height:16px;border-radius:50%;background:currentColor;opacity:calc(.15 + var(--o))}
+
+    /* === ALEXNET === */
+    .alex-layout{display:grid;grid-template-columns:600px 1fr;gap:100px;align-items:center}.alex-number{font:italic 800 300px/.8 var(--display);letter-spacing:-.08em}.alex-caption{font:700 35px/1.45 var(--serif);margin-top:50px}.layers{height:610px;display:flex;align-items:center;gap:24px;perspective:900px}.layer{height:var(--h);width:var(--w);border:1px solid currentColor;background:rgba(var(--paper-rgb),.07);transform:rotateY(-18deg);box-shadow:18px 18px 0 rgba(var(--paper-rgb),.025);display:grid;place-items:center;font:600 20px/1.4 var(--mono);letter-spacing:.06em}.layer:nth-child(odd){background:rgba(200,166,107,.14)}
+
+    /* === TRANSFORMER === */
+    .attention{position:absolute;left:150px;right:150px;top:270px;height:400px}.token{position:absolute;top:0;width:190px;height:82px;border:1px solid currentColor;display:grid;place-items:center;font:600 24px/1 var(--serif);background:rgba(var(--paper-rgb),.05)}.token.out{top:315px}.attention svg{position:absolute;inset:0;width:100%;height:100%;opacity:.4}.attention-quote{position:absolute;left:240px;right:240px;bottom:28px;text-align:center;font:600 27px/1.5 var(--serif)}
+
+    /* === GENERATIVE === */
+    .gen-word{position:absolute;left:80px;top:195px;font:italic 800 265px/.8 var(--display);letter-spacing:-.07em;opacity:.16}.gen-main{position:absolute;left:200px;right:180px;top:350px;font:700 78px/1.35 var(--serif);z-index:3}.gen-main em{font-family:var(--display);font-style:italic;color:var(--cream)}.gen-tags{position:absolute;left:205px;bottom:165px;display:flex;gap:25px}.gen-tags span{border:1px solid currentColor;padding:17px 25px;font:600 21px/1 var(--mono);letter-spacing:.1em}
+
+    /* === NOW === */
+    .now-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:45px;height:620px;margin-top:42px}.now-card{position:relative;border-top:1px solid currentColor;padding-top:30px}.now-index{font:italic 700 100px/1 var(--display);opacity:.18}.now-card h3{font:700 42px/1.3 var(--serif);margin:30px 0 20px}.now-card p{font:400 23px/1.7 var(--sans);opacity:.7}.now-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:180px;border:1px solid currentColor;border-radius:50% 50% 0 0;opacity:.13}
+
+    /* === THREE FORCES === */
+    .force-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:55px;height:610px;margin-top:55px}.force{border-left:1px solid currentColor;padding-left:35px;position:relative}.force-num{font:italic 800 150px/.8 var(--display);opacity:.18}.force h3{font:700 45px/1.25 var(--serif);margin:44px 0 22px}.force p{font:400 23px/1.7 var(--sans);opacity:.68}.force-bar{position:absolute;bottom:0;left:35px;right:0;height:7px;background:currentColor;transform-origin:left;animation:pulse 3.5s ease-in-out infinite}.force:nth-child(2) .force-bar{animation-delay:.5s}.force:nth-child(3) .force-bar{animation-delay:1s}@keyframes pulse{0%,100%{transform:scaleX(.2);opacity:.25}50%{transform:scaleX(1);opacity:.8}}
+
+    /* === FUTURE === */
+    .question{position:absolute;left:90px;right:90px;top:205px;font:700 100px/1.25 var(--serif);letter-spacing:.025em}.question-list{position:absolute;left:940px;right:110px;bottom:135px}.question-row{display:grid;grid-template-columns:100px 1fr;padding:25px 0;border-top:1px solid currentColor;font:600 25px/1.55 var(--serif)}.question-row .n{font-family:var(--mono);opacity:.48}
+
+    /* === END === */
+    .end-orb{position:absolute;width:720px;height:720px;left:600px;top:145px}.end-copy{position:absolute;left:120px;right:120px;top:380px;text-align:center;z-index:3;color:var(--paper)}.end-copy h2{font:700 92px/1.3 var(--serif);letter-spacing:.08em}.end-copy p{font:500 23px/1.6 var(--mono);letter-spacing:.18em;margin-top:45px}
+
+    /* === CONTROLS & EDITING === */
+    .deck-controls{display:flex;gap:13px;align-items:center;padding:10px 15px;border:1px solid rgba(240,230,210,.22);background:rgba(25,21,16,.65);backdrop-filter:blur(12px);border-radius:30px;color:var(--paper);font:500 15px/1 var(--mono);letter-spacing:.1em}
+    .deck-controls button{width:9px;height:9px;border:0;border-radius:50%;padding:0;background:rgba(240,230,210,.28);cursor:pointer}.deck-controls button.active{width:25px;border-radius:9px;background:var(--paper)}
+    .counter{min-width:72px;text-align:center}.edit-hotzone{position:fixed;left:0;top:0;width:80px;height:80px;z-index:10000}.edit-toggle{position:fixed;left:14px;top:14px;z-index:10001;border:1px solid rgba(240,230,210,.4);color:var(--paper);background:rgba(25,21,16,.8);padding:11px 14px;font:600 15px/1 var(--mono);opacity:0;pointer-events:none;transition:opacity .3s}.edit-toggle.show,.edit-toggle.active{opacity:1;pointer-events:auto}.editing [data-edit]{outline:1px dashed rgba(116,90,55,.7);outline-offset:4px;cursor:text}.dark.editing [data-edit]{outline-color:rgba(240,230,210,.55)}
+  </style>
+</head>
+<body>
+  <div class="deck-viewport">
+    <main class="deck-stage" id="deckStage">
+      <!-- 01 / COVER -->
+      <section class="slide active">
+        <div class="border"></div><header class="chrome"><span>ARCHIVE OF INTELLIGENCE<br>VOLUME 01 · 1956—2026</span><span class="right">MACHINE<br>LANGUAGE<br>HUMAN</span></header>
+        <div class="cover-title"><span class="ai reveal-left">AI</span><span class="zh reveal d2" data-edit>发展史</span></div>
+        <p class="cover-sub reveal d4" data-edit>从符号主义到生成式智能<br>一段关于机器、语言与人的演化史</p>
+        <div class="cover-bridge reveal d3"><div class="cover-bridge-title">FOUR SHIFTS OF INTELLIGENCE</div><div class="cover-era"><span>1956</span><span>符号与规则</span></div><div class="cover-era"><span>1990s</span><span>数据与统计</span></div><div class="cover-era"><span>2012</span><span>深度学习</span></div><div class="cover-era"><span>2022+</span><span>生成与行动</span></div></div>
+        <div class="cover-years">1956—2026</div>
+        <div class="cover-orb orb reveal-scale d3"></div><div class="cover-vlabel">THE EVOLUTION OF ARTIFICIAL INTELLIGENCE</div>
+        <div class="cover-timeline"><span style="top:0">1956</span><span style="top:27%">1997</span><span style="top:53%">2012</span><span style="top:78%">2022</span><span style="bottom:0">2026</span></div>
+      </section>
+
+      <!-- 02 / THESIS -->
+      <section class="slide dark">
+        <div class="border"></div><header class="chrome"><span>PROLOGUE · 一条主线</span><span class="right">01 / THESIS</span></header>
+        <div class="thesis-num display">70</div>
+        <h2 class="thesis-main reveal" data-edit>AI 的七十年，不只是机器变聪明。<br>它是人类不断改变<br><strong class="accent">“如何描述智能”</strong>的历史。</h2>
+        <div class="thesis-foot reveal d4"><span>规则 → 数据</span><span>识别 → 生成</span><span>工具 → 协作者</span></div><span class="page-no">02</span>
+      </section>
+
+      <!-- 03 / MASTER TIMELINE -->
+      <section class="slide">
+        <div class="border"></div><header class="chrome"><span>THE LONG ARC · 时间地图</span><span class="right">1956—2026</span></header>
+        <div class="content"><p class="eyebrow reveal">Four paradigm shifts</p><h2 class="slide-title reveal d2" data-edit>四次范式迁移，塑造今天的 AI</h2>
+          <div class="era-line"></div>
+          <div class="era reveal d2" style="left:120px"><div class="era-year">1956</div><div class="era-name">符号与规则</div><div class="era-note">把智能写成可推理的逻辑。</div></div>
+          <div class="era reveal d3" style="left:530px"><div class="era-year">1990s</div><div class="era-name">数据与统计</div><div class="era-note">让机器从样本中寻找规律。</div></div>
+          <div class="era reveal d4" style="left:950px"><div class="era-year">2012</div><div class="era-name">深度学习</div><div class="era-note">规模化神经网络重写感知。</div></div>
+          <div class="era reveal d5" style="left:1370px"><div class="era-year">2022+</div><div class="era-name">生成与行动</div><div class="era-note">模型开始表达、推理与执行。</div></div>
+        </div><span class="page-no">03</span>
+      </section>
+
+      <!-- 04 / SYMBOLIC AI -->
+      <section class="slide">
+        <div class="border"></div><header class="chrome"><span>CHAPTER I · THE LOGIC DREAM</span><span class="right">1956</span></header>
+        <div class="content split-grid">
+          <div><div class="big-year reveal-left">1956</div><h2 class="story-text reveal d2" data-edit>“智能可以被精确描述。”</h2><p class="story-body reveal d4" data-edit>达特茅斯会议为“人工智能”命名。早期研究者相信：只要把世界写成符号、规则与搜索路径，机器就能复现思考。</p></div>
+          <div class="diagram-card reveal-scale d3">
+            <svg class="logic-links" viewBox="0 0 750 650" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="220" y1="211" x2="274" y2="257"></line>
+              <line x1="530" y1="211" x2="476" y2="257"></line>
+              <line x1="220" y1="509" x2="274" y2="413"></line>
+              <line x1="530" y1="509" x2="476" y2="413"></line>
+            </svg>
+            <div class="logic-node" style="left:70px;top:80px">知识<br>KNOWLEDGE</div><div class="logic-node" style="right:70px;top:80px">规则<br>RULES</div><div class="logic-node" style="left:70px;bottom:70px">目标<br>GOAL</div><div class="logic-node" style="right:70px;bottom:70px">搜索<br>SEARCH</div>
+            <div class="logic-node logic-core">推理引擎<br><span class="mono" style="font-size:21px">INFERENCE</span></div>
+          </div>
+        </div><span class="page-no">04</span>
+      </section>
+
+      <!-- 05 / AI WINTERS -->
+      <section class="slide dark">
+        <div class="border"></div><header class="chrome"><span>CHAPTER II · WINTER CYCLES</span><span class="right">EXPECTATION / REALITY</span></header>
+        <div class="content"><p class="eyebrow reveal">When promises outran capability</p><h2 class="slide-title reveal d2" data-edit>AI 的冬天：每一次狂热，都要接受现实校准</h2>
+          <div class="wave">
+            <div class="winter-zone" style="left:23%;width:17%"><span class="winter-label">FIRST WINTER · 1970s</span></div><div class="winter-zone" style="left:58%;width:17%"><span class="winter-label">SECOND WINTER · LATE 1980s</span></div>
+            <svg viewBox="0 0 1600 410" preserveAspectRatio="none"><path d="M0 330 C140 310 170 50 320 70 S520 360 650 320 S800 80 970 105 S1180 370 1280 320 S1460 125 1600 85" fill="none" stroke="currentColor" stroke-width="4"/><path d="M0 330 C140 310 170 50 320 70 S520 360 650 320 S800 80 970 105 S1180 370 1280 320 S1460 125 1600 85" fill="none" stroke="#c8a66b" stroke-width="18" opacity=".12"/></svg>
+            <div class="wave-note" style="left:0"><strong>承诺上升</strong><p>研究突破带来资本、媒体与政策期待。</p></div><div class="wave-note" style="left:610px"><strong>能力遇墙</strong><p>算力、数据和真实世界复杂性暴露边界。</p></div><div class="wave-note" style="right:0"><strong>新范式重启</strong><p>旧问题没有消失，只是换一种方法继续。</p></div>
+          </div>
+        </div><span class="page-no">05</span>
+      </section>
+
+      <!-- 06 / EXPERT SYSTEMS -->
+      <section class="slide dark">
+        <div class="border"></div><header class="chrome"><span>CHAPTER III · KNOWLEDGE AT WORK</span><span class="right">1980s</span></header>
+        <div class="content"><div style="width:570px;padding-top:150px"><p class="eyebrow reveal">Expert systems</p><div class="big-year reveal-left d2" style="font-size:165px">IF / THEN</div><h2 class="story-text reveal d3" data-edit>把专家经验<br>装进机器。</h2><p class="story-body reveal d5" data-edit>在明确、封闭的行业场景里，规则系统第一次证明 AI 可以创造商业价值；但维护知识库的成本，也成为它的天花板。</p></div>
+          <div class="expert-shell reveal-scale d3"><div class="expert-core">知识库<br><span class="mono" style="font-size:21px">KNOWLEDGE BASE</span></div>
+            <div class="expert-chip" style="left:55px;top:80px">IF 症状 A<small>匹配事实与规则</small></div><div class="expert-chip" style="right:55px;top:80px">THEN 结论 B<small>输出诊断或建议</small></div>
+            <div class="expert-chip" style="left:55px;bottom:75px">专家录入<small>知识由人手工编码</small></div><div class="expert-chip" style="right:55px;bottom:75px">维护瓶颈<small>世界变化，规则过期</small></div>
+          </div>
+        </div><span class="page-no">06</span>
+      </section>
+
+      <!-- 07 / DATA TURN -->
+      <section class="slide">
+        <div class="border"></div><header class="chrome"><span>CHAPTER IV · THE DATA TURN</span><span class="right">1990s—2000s</span></header>
+        <div class="content"><p class="eyebrow reveal">A quiet but decisive reversal</p><h2 class="slide-title reveal d2" data-edit>不再告诉机器所有规则，让它从数据里学</h2>
+          <div class="versus">
+            <div class="side-card reveal d3"><span class="label">PROGRAMMING</span><h3>规则驱动</h3><p>人类写下规则，机器执行。<br>可解释，但难以覆盖复杂现实。</p><div class="data-dots"><i style="--o:.1"></i><i style="--o:.1"></i><i style="--o:.1"></i><i style="--o:.1"></i><i style="--o:.1"></i><i style="--o:.1"></i><i style="--o:.1"></i><i style="--o:.1"></i></div></div>
+            <div class="vs reveal-scale d4">→</div>
+            <div class="side-card reveal d5"><span class="label">MACHINE LEARNING</span><h3>数据驱动</h3><p>人类提供样本与目标，机器学习规律。<br>能力随数据和计算持续增长。</p><div class="data-dots"><i style="--o:.2"></i><i style="--o:.8"></i><i style="--o:.4"></i><i style="--o:.7"></i><i style="--o:.3"></i><i style="--o:.9"></i><i style="--o:.55"></i><i style="--o:.75"></i></div></div>
+          </div>
+        </div><span class="page-no">07</span>
+      </section>
+
+      <!-- 08 / DEEP LEARNING -->
+      <section class="slide dark">
+        <div class="border"></div><header class="chrome"><span>CHAPTER V · DEEP LEARNING</span><span class="right">2012</span></header>
+        <div class="content alex-layout">
+          <div><div class="alex-number reveal-left">2012</div><p class="alex-caption reveal d3" data-edit>更深的网络、更大的数据、<br>更强的计算，在同一时刻汇合。</p><p class="story-body reveal d5" data-edit>AlexNet 在 ImageNet 竞赛中的表现成为标志性事件：机器视觉进入深度学习时代。</p></div>
+          <div class="layers reveal-scale d3"><div class="layer" style="--h:300px;--w:110px">INPUT</div><div class="layer" style="--h:500px;--w:130px">CONV</div><div class="layer" style="--h:570px;--w:150px">FEATURE</div><div class="layer" style="--h:460px;--w:130px">DEEP</div><div class="layer" style="--h:350px;--w:110px">CLASS</div></div>
+        </div><span class="page-no">08</span>
+      </section>
+
+      <!-- 09 / TRANSFORMER -->
+      <section class="slide">
+        <div class="border"></div><header class="chrome"><span>CHAPTER VI · ATTENTION</span><span class="right">2017</span></header>
+        <div class="content"><p class="eyebrow reveal">The architecture behind the generative era</p><h2 class="slide-title reveal d2" data-edit>Transformer：让每个词，看见所有词</h2>
+          <div class="attention reveal-scale d3">
+            <svg viewBox="0 0 1500 400" preserveAspectRatio="none"><g stroke="currentColor" stroke-width="1.5"><path d="M95 82 L95 315"/><path d="M95 82 L425 315"/><path d="M95 82 L755 315"/><path d="M425 82 L95 315"/><path d="M425 82 L755 315"/><path d="M755 82 L425 315"/><path d="M755 82 L1085 315"/><path d="M1085 82 L755 315"/><path d="M1085 82 L1415 315"/><path d="M1415 82 L95 315"/><path d="M1415 82 L1415 315"/></g></svg>
+            <div class="token" style="left:0">每个</div><div class="token" style="left:330px">词</div><div class="token" style="left:660px">看见</div><div class="token" style="left:990px">所有</div><div class="token" style="left:1320px">词</div>
+            <div class="token out" style="left:0">语境</div><div class="token out" style="left:330px">关系</div><div class="token out" style="left:660px">含义</div><div class="token out" style="left:990px">预测</div><div class="token out" style="left:1320px">生成</div>
+          </div><p class="attention-quote reveal d5" data-edit>注意力机制把语言建模变成可扩展的通用能力，也为大模型奠定基础。</p>
+        </div><span class="page-no">09</span>
+      </section>
+
+      <!-- 10 / GENERATIVE ERA -->
+      <section class="slide dark">
+        <div class="border"></div><header class="chrome"><span>CHAPTER VII · THE GENERATIVE TURN</span><span class="right">2022+</span></header>
+        <div class="gen-word">GEN</div><h2 class="gen-main reveal" data-edit>AI 从“识别世界”走向<br><em>生成语言、图像、代码与行动。</em></h2>
+        <div class="gen-tags reveal d4"><span>LANGUAGE</span><span>IMAGE</span><span>CODE</span><span>VIDEO</span><span>ACTION</span></div><span class="page-no">10</span>
+      </section>
+
+      <!-- 11 / NOW -->
+      <section class="slide">
+        <div class="border"></div><header class="chrome"><span>CHAPTER VIII · INTELLIGENCE IN MOTION</span><span class="right">NOW</span></header>
+        <div class="content"><p class="eyebrow reveal">The frontier is shifting again</p><h2 class="slide-title reveal d2" data-edit>今天的前沿：模型不只回答，还开始观察、推理与执行</h2>
+          <div class="now-grid">
+            <article class="now-card reveal d3"><div class="now-index">01</div><h3>多模态</h3><p data-edit>文字、图像、声音和视频，被纳入同一个理解与生成系统。</p></article>
+            <article class="now-card reveal d4"><div class="now-index">02</div><h3>推理</h3><p data-edit>模型用更多计算处理复杂问题，并学会检查与修正过程。</p></article>
+            <article class="now-card reveal d5"><div class="now-index">03</div><h3>智能体</h3><p data-edit>AI 开始调用工具、操作软件，并围绕目标完成多步任务。</p></article>
+          </div>
+        </div><span class="page-no">11</span>
+      </section>
+
+      <!-- 12 / THREE FORCES -->
+      <section class="slide dark">
+        <div class="border"></div><header class="chrome"><span>THE ENGINE · WHY NOW?</span><span class="right">THREE FORCES</span></header>
+        <div class="content"><p class="eyebrow reveal">Progress is not magic</p><h2 class="slide-title reveal d2" data-edit>每一次跃迁，都来自三股力量同时放大</h2>
+          <div class="force-grid">
+            <article class="force reveal d3"><div class="force-num">01</div><h3>算法</h3><p data-edit>新的模型结构与训练方法，决定能力可以如何涌现。</p><i class="force-bar"></i></article>
+            <article class="force reveal d4"><div class="force-num">02</div><h3>数据</h3><p data-edit>更广泛、更高质量的经验，决定模型能理解多少世界。</p><i class="force-bar"></i></article>
+            <article class="force reveal d5"><div class="force-num">03</div><h3>算力</h3><p data-edit>更大规模的计算基础设施，让理论真正转化为能力。</p><i class="force-bar"></i></article>
+          </div>
+        </div><span class="page-no">12</span>
+      </section>
+
+      <!-- 13 / FUTURE -->
+      <section class="slide">
+        <div class="border"></div><header class="chrome"><span>EPILOGUE · THE NEXT QUESTION</span><span class="right">BEYOND CAPABILITY</span></header>
+        <h2 class="question reveal" data-edit>AI 的下一章，<br>不只取决于它能做什么，<br><span class="accent">更取决于我们让它做什么。</span></h2>
+        <div class="question-list">
+          <div class="question-row reveal d3"><span class="n">01</span><span data-edit>谁定义目标，谁承担责任？</span></div>
+          <div class="question-row reveal d4"><span class="n">02</span><span data-edit>效率增长如何转化为普遍价值？</span></div>
+          <div class="question-row reveal d5"><span class="n">03</span><span data-edit>人与机器，最终如何共同工作？</span></div>
+        </div><span class="page-no">13</span>
+      </section>
+
+      <!-- 14 / END -->
+      <section class="slide dark">
+        <div class="border"></div><header class="chrome"><span>ARCHIVE OF INTELLIGENCE</span><span class="right">END / BEGINNING</span></header>
+        <div class="end-orb orb reveal-scale"></div><div class="end-copy"><h2 class="reveal d2" data-edit>智能的历史，仍在书写。</h2><p class="reveal d4">THANK YOU · QUESTIONS & CONVERSATION</p></div><span class="page-no">14</span>
+      </section>
+    </main>
+  </div>
+
+  <nav class="deck-controls" id="controls" aria-label="幻灯片导航"><span class="counter" id="counter">01 / 14</span></nav>
+  <div class="edit-hotzone" title="编辑模式"></div><button class="edit-toggle" id="editToggle">EDIT · E</button>
+
+  <script>
+    /* === PRESENTATION CONTROLLER === */
+    class SlidePresentation{
+      constructor(){this.slides=[...document.querySelectorAll('.slide')];this.stage=document.getElementById('deckStage');this.current=0;this.lock=false;this.touchX=0;this.setupScale();this.setupNav();this.setupInputs();this.show(0)}
+      setupScale(){const fit=()=>{const s=Math.min(innerWidth/1920,innerHeight/1080),x=(innerWidth-1920*s)/2,y=(innerHeight-1080*s)/2;this.stage.style.transform=`translate(${x}px,${y}px) scale(${s})`};fit();addEventListener('resize',fit)}
+      setupNav(){const c=document.getElementById('controls');this.slides.forEach((_,i)=>{const b=document.createElement('button');b.setAttribute('aria-label',`第 ${i+1} 页`);b.onclick=()=>this.show(i);c.appendChild(b)})}
+      setupInputs(){
+        addEventListener('keydown',e=>{if(document.body.classList.contains('editing'))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();this.show(this.current+1)}if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();this.show(this.current-1)}if(e.key==='Home')this.show(0);if(e.key==='End')this.show(this.slides.length-1)});
+        addEventListener('wheel',e=>{if(this.lock)return;this.lock=true;this.show(this.current+(e.deltaY+e.deltaX>0?1:-1));setTimeout(()=>this.lock=false,650)},{passive:true});
+        addEventListener('touchstart',e=>this.touchX=e.touches[0].clientX,{passive:true});addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-this.touchX;if(Math.abs(d)>45)this.show(this.current+(d<0?1:-1))},{passive:true})
+      }
+      show(i){this.current=Math.max(0,Math.min(i,this.slides.length-1));this.slides.forEach((s,n)=>{s.classList.toggle('active',n===this.current);s.classList.remove('visible')});requestAnimationFrame(()=>this.slides[this.current].classList.add('visible'));document.querySelectorAll('#controls button').forEach((b,n)=>b.classList.toggle('active',n===this.current));document.getElementById('counter').textContent=`${String(this.current+1).padStart(2,'0')} / ${this.slides.length}`}
+    }
+    const deck=new SlidePresentation();
+
+    /* === INLINE EDITING & LOCAL AUTOSAVE === */
+    const editor={active:false,toggle(){this.active=!this.active;document.body.classList.toggle('editing',this.active);document.querySelectorAll('[data-edit]').forEach((el,i)=>{el.contentEditable=this.active;const saved=localStorage.getItem('ai-history-'+i);if(saved!==null&&el.innerHTML!==saved)el.innerHTML=saved;el.oninput=()=>localStorage.setItem('ai-history-'+i,el.innerHTML)});editToggle.classList.toggle('active',this.active);editToggle.textContent=this.active?'SAVE · CTRL+S':'EDIT · E'}};
+    const hotzone=document.querySelector('.edit-hotzone'),editToggle=document.getElementById('editToggle');let hideTO;
+    hotzone.onmouseenter=()=>{clearTimeout(hideTO);editToggle.classList.add('show')};hotzone.onmouseleave=()=>hideTO=setTimeout(()=>{if(!editor.active)editToggle.classList.remove('show')},400);editToggle.onmouseenter=()=>clearTimeout(hideTO);editToggle.onmouseleave=()=>hideTO=setTimeout(()=>{if(!editor.active)editToggle.classList.remove('show')},400);hotzone.onclick=editToggle.onclick=()=>editor.toggle();
+    addEventListener('keydown',e=>{if((e.key==='e'||e.key==='E')&&!e.target.isContentEditable)editor.toggle();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'&&editor.active){e.preventDefault();editor.toggle()}})
+  </script>
+</body>
+</html>
